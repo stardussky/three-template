@@ -1,13 +1,12 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
   entry: {
     app: './src/index.js',
   },
   output: {
-    filename: '[name].bundle.js',
+    filename: 'js/[name].bundle.js',
     path: path.resolve(__dirname, 'dist'),
     pathinfo: false,
   },
@@ -30,7 +29,6 @@ module.exports = {
     },
   },
   plugins: [
-    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       template: 'index.html',
     }),
@@ -45,19 +43,6 @@ module.exports = {
         },
       },
       {
-        test: /\.s[ac]ss$/i,
-        use: [
-          'style-loader',
-          'css-loader',
-          {
-            loader: 'sass-loader',
-            options: {
-              implementation: require('sass'),
-            },
-          },
-        ],
-      },
-      {
         test: /\.m?js$/,
         exclude: /(node_modules|bower_components)/,
         use: {
@@ -68,6 +53,18 @@ module.exports = {
         test: /\.(glsl|vs|fs|vert|frag)$/,
         exclude: /node_modules/,
         use: ['raw-loader', 'glslify-loader'],
+      },
+      {
+        test: /\.(glb|gltf)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              esModule: false,
+              outputPath: 'models',
+            },
+          },
+        ],
       },
     ],
   },
