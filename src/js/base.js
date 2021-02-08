@@ -14,8 +14,8 @@ export default class Base {
   }
   dev(camera, el) {
     const control = new OrbitControls(camera, el)
-
-    return control
+    const axe = new THREE.AxesHelper(1, 1)
+    return { control, axe }
   }
   async loadResource() {
     const promises = []
@@ -81,6 +81,33 @@ export default class Base {
         }
       })
       obj.material.dispose()
+    }
+  }
+
+  addEvent(event, object, type) {
+    const instance = {
+      event,
+      object,
+      type,
+    }
+    this.events.push(instance)
+    object.addEventListener(type, event)
+    return instance
+  }
+
+  removeEvent(instance) {
+    const { event, object, type } = instance
+    const index = this.events.findIndex((item) => item === instance)
+    if (~index) {
+      object.removeEventListener(type, event)
+      this.events.splice(index, 1)
+    }
+  }
+
+  removeEvents() {
+    while (this.events.length) {
+      const { event, object, type } = this.events.pop()
+      object.removeEventListener(type, event)
     }
   }
 }

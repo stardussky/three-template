@@ -31,7 +31,8 @@ export default class extends Base {
     this.createShaderSketch()
     this.render()
 
-    this.scene.add(this.dev(this.camera, this.renderer.domElement))
+    const { axe } = this.dev(this.camera, this.renderer.domElement)
+    this.scene.add(axe)
   }
 
   createShaderSketch() {
@@ -54,8 +55,7 @@ export default class extends Base {
   }
 
   event() {
-    this.resize = this.resize.bind(this)
-    window.addEventListener('resize', this.resize)
+    this.addEvent(this.resize.bind(this), window, 'resize')
   }
 
   resize() {
@@ -82,8 +82,8 @@ export default class extends Base {
   destroy() {
     this.stop()
     this.renderer.domElement.addEventListener('dblclick', null, false)
-    window.removeEventListener('resize', this.resize)
 
+    this.removeEvents()
     this.disposeObject(this.scene)
     this.scene = null
     this.camera = null
