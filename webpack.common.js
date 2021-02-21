@@ -1,3 +1,4 @@
+const Webpack = require('webpack')
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
@@ -30,6 +31,7 @@ module.exports = {
     },
   },
   plugins: [
+    new Webpack.ProvidePlugin({}),
     new HtmlWebpackPlugin({
       template: 'index.html',
     }),
