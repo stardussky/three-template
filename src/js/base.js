@@ -6,39 +6,71 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('three/examples/js/libs/draco/')
 
-const resources = []
+const defaultResources = []
 
 export default class Base {
   constructor() {
-    this.resource = null
+    this.resources = []
+    this.events = []
   }
+
   dev(camera, el) {
     const control = new OrbitControls(camera, el)
+    // const control = null
     const axe = new THREE.AxesHelper(1, 1)
     return { control, axe }
   }
-  async loadResource() {
-    const promises = []
 
-    for (const resource of resources) {
-      const type = resource.type
-      if (type === 'texture') {
-        promises.push(this.textureLoader(require(`@/assets/${resource.src}`)))
-        continue
-      }
-      if (type === 'model') {
-        promises.push(this.gltfLoader(require(`@/assets/${resource.src}`)))
-      }
-    }
-
-    this.resource = await Promise.all(promises).then((result) => {
-      const obj = {}
-      result.forEach((resource, i) => {
-        obj[resources[i].name] = resource
-      })
-      return obj
-    })
+  degToRad(rad) {
+    return (rad * Math.PI) / 180
   }
+
+  async loadDefaultResources() {
+    return await this.addResources(defaultResources)
+  }
+
+  async addResource(payload) {
+    const { type, src, name } = payload
+    let resource
+    if (type === 'texture') {
+      resource = await this.textureLoader(require(`@/assets/${src}`))
+    }
+    if (type === 'model') {
+      resource = await this.gltfLoader(require(`@/assets/${src}`))
+    }
+    if (resource) {
+      this.resources.push({
+        type,
+        name: name || src,
+        resource,
+      })
+    }
+    return resource
+  }
+
+  async addResources(payload) {
+    const promises = payload.map((resource) => this.addResource(resource))
+
+    return await Promise.all(promises).then((result) => result)
+  }
+
+  getResource = (() => {
+    const memo = {}
+    return (string, type = 'name') => {
+      if (memo[string]) return memo[string]
+      const target = this.resources.find((resource) => resource[type] === string)
+      memo[string] = target
+      return target
+    }
+  })()
+
+  getResources(payload, type = 'name') {
+    if (typeof payload === 'function') {
+      return this.resources.filter(payload)
+    }
+    return this.resources.filter((resource) => resource[type] === payload)
+  }
+
   textureLoader(url) {
     const loader = new THREE.TextureLoader()
     return new Promise((resolve) => {
@@ -48,18 +80,15 @@ export default class Base {
       })
     })
   }
+
   gltfLoader(url) {
     const loader = new GLTFLoader()
     loader.setDRACOLoader(dracoLoader)
     return new Promise((resolve) => {
       loader.load(url, (glb) => {
-        resolve(glb.scene)
+        resolve(glb)
       })
     })
-  }
-
-  radToDeg(rad) {
-    return (rad * Math.PI) / 180
   }
 
   disposeObject(obj) {

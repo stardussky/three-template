@@ -12,7 +12,8 @@ export default class extends Base {
     this.render = this.render.bind(this)
   }
 
-  init() {
+  async init() {
+    await Promise.all([this.loadDefaultResources()])
     const { width, height, aspect, dpr } = this.viewport
     this.scene = new THREE.Scene()
 
