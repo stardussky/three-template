@@ -28,7 +28,7 @@ export default class extends Base {
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100)
     this.camera.position.set(0, 0, 3)
 
-    this.event()
+    this.addEvent(this.resize.bind(this), window, 'resize')
     this.createShaderSketch()
     this.render()
 
@@ -55,10 +55,6 @@ export default class extends Base {
     })
   }
 
-  event() {
-    this.addEvent(this.resize.bind(this), window, 'resize')
-  }
-
   resize() {
     const { width, height, aspect } = this.viewport
     this.renderer.setSize(width, height)
@@ -71,8 +67,9 @@ export default class extends Base {
     this.reqID = requestAnimationFrame(this.render)
     this.renderer.render(this.scene, this.camera)
 
+    const d = this.clock.getDelta()
     for (let i = 0, len = this.reqRenders.length; i < len; i++) {
-      this.reqRenders[i](this.clock.getElapsedTime())
+      this.reqRenders[i](d, this.clock.elapsedTime)
     }
   }
 
