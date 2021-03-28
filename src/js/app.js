@@ -4,12 +4,14 @@ import vertexShader from '@/glsl/vertexShader.glsl'
 import fragmentShader from '@/glsl/fragmentShader.glsl'
 
 export default class extends Base {
-  constructor(el) {
-    super()
-    this.el = el
-    this.reqRenders = []
-    this.clock = new THREE.Clock()
-    this.render = this.render.bind(this)
+  constructor(el = document.body) {
+    if (el instanceof Element) {
+      super()
+      this.el = el
+      this.reqRenders = []
+      this.clock = new THREE.Clock()
+      this.render = this.render.bind(this)
+    }
   }
 
   async init() {
@@ -102,7 +104,7 @@ export default class extends Base {
 
   get viewSize() {
     const distance = this.camera.position.z
-    const vFov = this.radToDeg(this.camera.fov)
+    const vFov = THREE.Math.degToRad(this.camera.fov)
     const height = 2 * Math.tan(vFov / 2) * distance
     const width = height * this.viewport.aspect
     return { width, height, vFov }

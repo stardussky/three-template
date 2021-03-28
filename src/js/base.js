@@ -21,10 +21,6 @@ export default class Base {
     return { control, axe }
   }
 
-  degToRad(rad) {
-    return (rad * Math.PI) / 180
-  }
-
   async loadDefaultResources() {
     return await this.addResources(defaultResources)
   }
