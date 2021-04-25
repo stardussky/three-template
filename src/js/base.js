@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('three/examples/js/libs/draco/')
 
-const defaultResources = []
+const defaultResources = [{ type: 'texture', name: 'bg', src: 'bg.jpg' }]
 
 export default class Base {
   constructor() {

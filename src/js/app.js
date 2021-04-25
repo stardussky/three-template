@@ -9,6 +9,7 @@ export default class extends Base {
       super()
       this.el = el
       this.reqRenders = []
+      this.resizes = []
       this.clock = new THREE.Clock()
       this.render = this.render.bind(this)
     }
@@ -34,13 +35,26 @@ export default class extends Base {
     this.createShaderSketch()
     this.render()
 
+    this.resizes.push(() => {
+      const { width, height, aspect } = this.viewport
+      this.renderer.setSize(width, height)
+
+      this.camera.aspect = aspect
+      this.camera.updateProjectionMatrix()
+    })
+
     const { axe } = this.dev(this.camera, this.renderer.domElement)
     this.scene.add(axe)
   }
 
   createShaderSketch() {
+    const { width: vpWidth, height: vpHeight } = this.viewport
+    const { width, height } = this.viewSize
     this.uniforms = {
+      uResolution: new THREE.Uniform(new THREE.Vector2(vpWidth, vpHeight)),
       uTime: new THREE.Uniform(0),
+      uTexture: new THREE.Uniform(this.getResource('bg').resource),
+      uTextureRatio: new THREE.Uniform(2560 / 1440),
     }
     const geometry = new THREE.PlaneBufferGeometry(1, 1, 30, 30)
     const material = new THREE.ShaderMaterial({
@@ -50,19 +64,24 @@ export default class extends Base {
       side: THREE.DoubleSide,
     })
     this.planeSketch = new THREE.Mesh(geometry, material)
+    this.planeSketch.scale.set(width, height, 1)
     this.scene.add(this.planeSketch)
 
-    this.reqRenders.push((t) => {
+    this.reqRenders.push((d, t) => {
       this.uniforms.uTime.value = t
+    })
+    this.resizes.push(() => {
+      const { width: vpWidth, height: vpHeight } = this.viewport
+      const { width, height } = this.viewSize
+      this.uniforms.uResolution.value = new THREE.Vector2(vpWidth, vpHeight)
+      this.planeSketch.scale.set(width, height, 1)
     })
   }
 
   resize() {
-    const { width, height, aspect } = this.viewport
-    this.renderer.setSize(width, height)
-
-    this.camera.aspect = aspect
-    this.camera.updateProjectionMatrix()
+    for (let i = 0, len = this.resizes.length; i < len; i++) {
+      this.resizes[i]()
+    }
   }
 
   render() {
