@@ -5,5 +5,8 @@ void main(){
 
   vec3 pos = position.xyz;
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+
+  gl_Position = projectionMatrix * mvPos;
+  // gl_PointSize = ( 10.0 / - mvPos.z );
 }

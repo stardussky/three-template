@@ -6,13 +6,14 @@ module.exports = merge(common, {
   devtool: 'inline-source-map',
   devServer: {
     contentBase: './dist',
-    compress: true,
-    hot: true,
-    open: false,
     // host: '0.0.0.0',
+    // https: true,
     // disableHostCheck: true,
     // useLocalIp: true,
-    // https: true,
+    compress: true,
+    hot: true,
+    open: true,
+    quiet: true,
     overlay: {
       warnings: false,
       errors: true,
