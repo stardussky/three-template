@@ -51,11 +51,18 @@ export default class Basic {
     this.scene = new THREE.Scene()
 
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      powerPreference: 'high-performance',
+      antialias: dpr <= 1,
       // alpha: true,
     })
     this.renderer.setSize(width, height)
     this.renderer.setPixelRatio(dpr)
+    this.renderer.physicallyCorrectLights = true
+    this.renderer.outputEncoding = THREE.sRGBEncoding
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping
+    this.renderer.toneMappingExposure = 1
+    // this.renderer.shadowMap.enabled = true
+    this.renderer.shadowMap.type = THREE.VSMShadowMap
     this.el.appendChild(this.renderer.domElement)
 
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100)
