@@ -57,20 +57,16 @@ module.exports = {
       },
       {
         test: /\.(glsl|vs|fs|vert|frag)$/,
+        type: 'asset/source',
         exclude: /node_modules/,
-        use: ['raw-loader', 'glslify-loader'],
+        use: ['glslify-loader'],
       },
       {
         test: /\.(glb|gltf)$/,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              esModule: false,
-              outputPath: 'models',
-            },
-          },
-        ],
+        type: 'asset/resource',
+        generator: {
+          filename: 'models/[hash][ext][query]',
+        },
       },
     ],
   },

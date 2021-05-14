@@ -32,7 +32,7 @@ export default class Basic {
       }
       this.textureLoader = new THREE.TextureLoader(this.loaderManager)
       this.gltfLoader = new GLTFLoader(this.loaderManager).setDRACOLoader(
-        new DRACOLoader().setDecoderPath('three/examples/js/libs/draco/')
+        new DRACOLoader().setDecoderPath('/draco/')
       )
     }
   }
