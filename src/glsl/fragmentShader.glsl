@@ -5,17 +5,20 @@ uniform float uTextureRatio;
 uniform vec2 uResolution;
 uniform sampler2D uTexture;
 
-void main(){
-  vec2 uvScaler = vec2(1.);
-  float aspectRatio = uResolution.x / uResolution.y;
+vec2 coverUv(vec2 uv, float aspectRatio, float ratio){
+  vec2 scale = vec2(1.);
 
-  if(uTextureRatio > aspectRatio) {
-    uvScaler = vec2(aspectRatio / uTextureRatio, 1.);
+  if(ratio > aspectRatio) {
+    scale = vec2(aspectRatio / ratio, 1.);
   } else {
-    uvScaler = vec2(1., uTextureRatio / aspectRatio);
+    scale = vec2(1., ratio / aspectRatio);
   }
 
-  vec2 newUv = (vUv - vec2(0.5)) * uvScaler + vec2(0.5);
+  return (uv - vec2(0.5)) * scale + vec2(0.5);
+}
+
+void main(){
+  vec2 newUv = coverUv(vUv, uResolution.x / uResolution.y, uTextureRatio);
 
   // vec3 col = texture2D(uTexture, newUv).rgb;
   vec3 col = vec3(newUv, sin(uTime));

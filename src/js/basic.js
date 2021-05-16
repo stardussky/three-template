@@ -31,6 +31,7 @@ export default class Basic {
         this.loadStatus.isDone = true
       }
       this.textureLoader = new THREE.TextureLoader(this.loaderManager)
+      this.cubeTextureLoader = new THREE.CubeTextureLoader(this.loaderManager)
       this.gltfLoader = new GLTFLoader(this.loaderManager).setDRACOLoader(
         new DRACOLoader().setDecoderPath('/draco/')
       )
@@ -127,6 +128,9 @@ export default class Basic {
     if (type === 'texture') {
       resource = await this.loadTexture(require(`@/assets/${src}`))
     }
+    if (type === 'cubeTexture') {
+      resource = await this.loadCubeTexture(name, require(`@/assets/${src}`))
+    }
     if (type === 'model') {
       resource = await this.loadGltf(require(`@/assets/${src}`))
     }
@@ -174,6 +178,23 @@ export default class Basic {
       })
     })
   }
+
+  loadCubeTexture = (() => {
+    const memo = {}
+    return function (name, url) {
+      const mats = memo[name]
+      mats ? mats.push(url) : (memo[name] = [url])
+
+      if (mats && mats.length === 6) {
+        return new Promise((resolve) => {
+          this.cubeTextureLoader.load(mats, (texture) => {
+            delete memo[name]
+            resolve(texture)
+          })
+        })
+      }
+    }
+  })()
 
   loadGltf(url) {
     return new Promise((resolve) => {

@@ -1,4 +1,4 @@
-import * as THREE from 'three/build/three.module'
+import * as THREE from 'three'
 import Basic from './basic'
 import vertexShader from '@/glsl/vertexShader.glsl'
 import fragmentShader from '@/glsl/fragmentShader.glsl'
