@@ -1,9 +1,11 @@
-varying vec2 vUv;
+#define PI 3.1415926
 
 uniform float uTime;
 uniform float uTextureRatio;
 uniform vec2 uResolution;
 uniform sampler2D uTexture;
+
+varying vec2 vUv;
 
 vec2 coverUv(vec2 uv, float aspectRatio, float ratio){
   vec2 scale = vec2(1.);
@@ -21,7 +23,7 @@ void main(){
   vec2 newUv = coverUv(vUv, uResolution.x / uResolution.y, uTextureRatio);
 
   // vec3 col = texture2D(uTexture, newUv).rgb;
-  vec3 col = vec3(newUv, sin(uTime));
+  vec3 col = vec3(newUv, abs(sin(uTime * 0.5)));
 
   gl_FragColor = vec4(col, 1.0);
 }

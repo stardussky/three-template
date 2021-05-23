@@ -72,9 +72,6 @@ export default class Basic {
     this.addEvent(this.resize.bind(this), window, 'resize')
     this.render()
 
-    this.reqRenders.push(() => {
-      this.renderer.render(this.scene, this.camera)
-    })
     this.resizes.push(() => {
       const { width, height, aspect } = this.viewport
       this.renderer.setSize(width, height)
