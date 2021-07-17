@@ -20,10 +20,12 @@ vec2 coverUv(vec2 uv, float aspectRatio, float ratio){
 }
 
 void main(){
-  vec2 newUv = coverUv(vUv, uResolution.x / uResolution.y, uTextureRatio);
+  vec2 uv = vUv;
+  vec2 rUv = (vUv - 0.5) * vec2(uResolution.x / uResolution.y, 1.);
+  vec2 tUv = coverUv(vUv, uResolution.x / uResolution.y, uTextureRatio);
 
-  // vec3 col = texture2D(uTexture, newUv).rgb;
-  vec3 col = vec3(newUv, abs(sin(uTime * 0.5)));
+  // vec3 final = texture2D(uTexture, tUv).rgb;
+  vec3 final = vec3(uv, abs(sin(uTime * 0.5)));
 
-  gl_FragColor = vec4(col, 1.0);
+  gl_FragColor = vec4(final, 1.0);
 }

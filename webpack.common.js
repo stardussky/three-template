@@ -3,6 +3,8 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
+const transpileDependencies = []
+
 module.exports = {
   entry: {
     app: './src/index.js',
@@ -50,7 +52,7 @@ module.exports = {
       },
       {
         test: /\.m?js$/,
-        exclude: /(node_modules|bower_components)/,
+        exclude: new RegExp(`node_modules/(?!(${transpileDependencies.join('|')})/).*`),
         use: {
           loader: 'babel-loader?cacheDirectory',
         },

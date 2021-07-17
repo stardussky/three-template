@@ -2,13 +2,13 @@ import * as THREE from 'three'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass'
-import Basic from './basic'
+import Sketch from './sketch'
 import vertexShader from '@/glsl/vertexShader.glsl'
 import fragmentShader from '@/glsl/fragmentShader.glsl'
 import postprocessingVertexShader from '@/glsl/postprocessing/vertexShader.glsl'
 import postprocessingFragmentShader from '@/glsl/postprocessing/fragmentShader.glsl'
 
-export default class extends Basic {
+export default class extends Sketch {
   constructor(el = document.body) {
     super(el)
   }
@@ -16,10 +16,10 @@ export default class extends Basic {
   async init() {
     await super.init()
 
-    this.createPostprocessing()
-    this.createShaderSketch()
-
     this.dev(true)
+
+    // this.createPostprocessing()
+    this.createShaderSketch()
 
     this.reqRenders.push(() => {
       if (this.effectComposer) {
@@ -71,17 +71,19 @@ export default class extends Basic {
     const { width: vpWidth, height: vpHeight } = this.viewport
     const { width, height } = this.viewSize
 
-    const uniforms = THREE.UniformsUtils.merge([
-      {
-        uResolution: new THREE.Uniform(new THREE.Vector2(vpWidth, vpHeight)),
-        uTime: new THREE.Uniform(0),
-        uTexture: new THREE.Uniform(this.getResource('bg').resource),
-        uTextureRatio: new THREE.Uniform(2560 / 1440),
-      },
-    ])
+    const texture = this.getResource('grid').resource
+
+    const uniforms = {
+      ...THREE.UniformsUtils.merge([]),
+      uResolution: new THREE.Uniform(new THREE.Vector2(vpWidth, vpHeight)),
+      uTime: new THREE.Uniform(0),
+      uTexture: new THREE.Uniform(texture),
+      uTextureRatio: new THREE.Uniform(texture.image.width / texture.image.height),
+    }
 
     const geometry = new THREE.PlaneBufferGeometry(1, 1, 30, 30)
     const material = new THREE.ShaderMaterial({
+      // precision: 'lowp',
       vertexShader,
       fragmentShader,
       uniforms,
