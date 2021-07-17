@@ -88,12 +88,12 @@ export default class {
     this.el.appendChild(this.renderer.domElement)
 
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100)
-    // const frustum = 2
+    // const frustumSize = 2
     // this.camera = new THREE.OrthographicCamera(
-    //   (frustum * aspect) / -2,
-    //   (frustum * aspect) / 2,
-    //   frustum / 2,
-    //   frustum / -2,
+    //   (frustumSize * aspect) / -2,
+    //   (frustumSize * aspect) / 2,
+    //   frustumSize / 2,
+    //   frustumSize / -2,
     //   0.01,
     //   100
     // )
@@ -106,7 +106,14 @@ export default class {
       const { width, height, aspect } = this.viewport
       this.renderer.setSize(width, height)
 
-      this.camera.aspect = aspect
+      if (this.camera.type === 'OrthographicCamera') {
+        this.camera.left = (frustumSize * aspect) / -2
+        this.camera.right = (frustumSize * aspect) / 2
+        this.camera.top = frustumSize / 2
+        this.camera.bottom = frustumSize / -2
+      } else {
+        this.camera.aspect = aspect
+      }
       this.camera.updateProjectionMatrix()
     })
   }
