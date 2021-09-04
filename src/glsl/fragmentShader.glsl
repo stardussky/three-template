@@ -23,7 +23,8 @@ void main(){
   vec2 uv = vUv;
   vec2 rUv = (vUv - 0.5) * vec2(uResolution.x / uResolution.y, 1.);
   vec2 tUv = coverUv(vUv, uResolution.x / uResolution.y, uTextureRatio);
-
+  vec2 gUv = gl_FragCoord.xy / uResolution;
+  
   // vec3 final = texture2D(uTexture, tUv).rgb;
   vec3 final = vec3(uv, abs(sin(uTime * 0.5)));
 

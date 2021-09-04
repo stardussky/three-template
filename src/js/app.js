@@ -9,14 +9,22 @@ import postprocessingVertexShader from '@/glsl/postprocessing/vertexShader.glsl'
 import postprocessingFragmentShader from '@/glsl/postprocessing/fragmentShader.glsl'
 
 export default class extends Sketch {
-  constructor(el = document.body) {
-    super(el)
+  constructor(el) {
+    super(el, {
+      develop: true,
+      control: true,
+      gui: true,
+      alpha: false,
+      autoClear: true,
+      shadow: false,
+      shadowAutoUpdate: false,
+      camera: 'perspective',
+      autoRender: true,
+    })
   }
 
   async init() {
     await super.init()
-
-    this.dev(true)
 
     // this.createPostprocessing()
     this.createShaderSketch()
@@ -71,7 +79,7 @@ export default class extends Sketch {
     const { width: vpWidth, height: vpHeight } = this.viewport
     const { width, height } = this.viewSize
 
-    const texture = this.getResource('grid').resource
+    const texture = this.loader.getResource('grid').resource
 
     const uniforms = {
       ...THREE.UniformsUtils.merge([]),

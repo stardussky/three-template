@@ -1,8 +1,8 @@
 import * as dat from 'dat.gui'
 import * as THREE from 'three'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import Loader from './loader'
+import Event from './event'
 
 const defaultResources = [
   {
@@ -24,83 +24,80 @@ const defaultResources = [
   },
 ]
 
-export default class {
-  constructor(el) {
-    if (el instanceof Element) {
-      this.el = el
-      this.reqRenders = []
-      this.resizes = []
-      this.resources = []
-      this.events = []
-      this.clock = new THREE.Clock()
-      this.render = this.render.bind(this)
-
-      this.loadStatus = {
-        total: 0,
-        progress: 0,
-        isDone: false,
-      }
-      this.loaderManager = new THREE.LoadingManager()
-      this.loaderManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-        this.loadStatus.total = itemsTotal
-        this.loadStatus.progress = itemsLoaded / this.loadStatus.total
-      }
-      this.loaderManager.onLoad = () => {
-        this.loadStatus.isDone = true
-      }
-      this.textureLoader = new THREE.TextureLoader(this.loaderManager)
-      this.cubeTextureLoader = new THREE.CubeTextureLoader(this.loaderManager)
-      this.gltfLoader = new GLTFLoader(this.loaderManager).setDRACOLoader(
-        new DRACOLoader().setDecoderPath('/draco/')
-      )
+export default class Sketch {
+  constructor(el, options = {}) {
+    this.sketchOptions = {
+      develop: true,
+      control: true,
+      gui: true,
+      alpha: false,
+      autoClear: true,
+      shadow: false,
+      shadowAutoUpdate: false,
+      camera: 'perspective',
+      autoRender: true,
+      ...options,
     }
-  }
-
-  dev(control) {
-    if (control) {
-      new OrbitControls(this.camera, this.el)
+    if (!(el instanceof Element)) {
+      el = document.body
     }
-    this.gui = new dat.GUI()
-    this.scene.add(new THREE.AxesHelper(1, 1))
-  }
 
-  async init() {
-    await Promise.all([this.loadDefaultResources()])
+    this.loader = new Loader(defaultResources)
+    this.event = new Event()
+    this.el = el
+    this.reqRenders = []
+    this.resizes = []
+    this.clock = new THREE.Clock()
+    this.render = this.render.bind(this)
+
+    const {
+      develop,
+      control,
+      gui,
+      alpha,
+      autoClear,
+      shadow,
+      shadowAutoUpdate,
+      camera = 'perspective',
+      autoRender,
+    } = this.sketchOptions
     const { width, height, aspect, dpr } = this.viewport
     this.scene = new THREE.Scene()
 
     this.renderer = new THREE.WebGLRenderer({
       powerPreference: 'high-performance',
       antialias: dpr <= 1,
-      // alpha: true,
-      // preserveDrawingBuffer: true,
+      alpha,
+      preserveDrawingBuffer: !autoClear,
     })
     this.renderer.setSize(width, height)
     this.renderer.setPixelRatio(dpr)
-    // this.renderer.autoClear = false
+    this.renderer.autoClear = autoClear
     this.renderer.physicallyCorrectLights = true
     this.renderer.outputEncoding = THREE.sRGBEncoding
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = 1
     this.renderer.shadowMap.type = THREE.VSMShadowMap
-    // this.renderer.shadowMap.enabled = true
-    // this.renderer.shadowMap.autoUpdate = false
+    this.renderer.shadowMap.enabled = shadow
+    this.renderer.shadowMap.autoUpdate = shadowAutoUpdate
     this.el.appendChild(this.renderer.domElement)
 
-    this.camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100)
-    // const frustumSize = 2
-    // this.camera = new THREE.OrthographicCamera(
-    //   (frustumSize * aspect) / -2,
-    //   (frustumSize * aspect) / 2,
-    //   frustumSize / 2,
-    //   frustumSize / -2,
-    //   0.01,
-    //   100
-    // )
+    if (camera === 'perspective') {
+      this.camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 100)
+    } else {
+      const frustumSize = 2
+      this.camera = new THREE.OrthographicCamera(
+        (frustumSize * aspect) / -2,
+        (frustumSize * aspect) / 2,
+        frustumSize / 2,
+        frustumSize / -2,
+        0.01,
+        100
+      )
+    }
     this.camera.position.set(0, 0, 3)
 
-    this.addEvent(this.resize.bind(this), window, 'resize')
-    this.render()
+    this.event.add('resize', window, this.resize.bind(this))
 
     this.resizes.push(() => {
       const { width, height, aspect } = this.viewport
@@ -116,6 +113,26 @@ export default class {
       }
       this.camera.updateProjectionMatrix()
     })
+
+    if (autoRender) this.render()
+
+    this.dev(develop, control, gui)
+  }
+
+  dev(develop, control, gui) {
+    if (develop) {
+      this.scene.add(new THREE.AxesHelper(1, 1))
+    }
+    if (control) {
+      new OrbitControls(this.camera, this.el)
+    }
+    if (gui) {
+      this.gui = new dat.GUI()
+    }
+  }
+
+  async init() {
+    await this.loader.load()
   }
 
   resize() {
@@ -124,9 +141,7 @@ export default class {
     }
   }
 
-  render() {
-    this.reqID = requestAnimationFrame(this.render)
-
+  update() {
     const d = this.clock.getDelta()
     for (let i = 0, len = this.reqRenders.length; i < len; i++) {
       this.reqRenders[i](d, this.clock.elapsedTime)
@@ -137,11 +152,17 @@ export default class {
     window.cancelAnimationFrame(this.reqID)
   }
 
+  render() {
+    this.reqID = requestAnimationFrame(this.render)
+
+    this.update()
+  }
+
   destroy() {
     this.stop()
 
-    this.gui?.destroy()
-    this.removeEvents()
+    if (this.sketchOptions.gui) this.gui.destroy()
+    this.event.destroy()
     this.disposeObject(this.scene)
     this.renderer.dispose()
     this.scene = null
@@ -150,111 +171,6 @@ export default class {
     while (this.el.lastChild) {
       this.el.removeChild(this.el.lastChild)
     }
-  }
-
-  async loadDefaultResources() {
-    return await this.addResources(defaultResources)
-  }
-
-  async addResource(payload) {
-    let { type, src, name, options } = payload
-
-    if (!src.match(/^(http|https):\/\//)) {
-      src = require(`@/assets/${src}`)
-    }
-
-    let resource
-    if (type === 'texture') {
-      resource = await this.loadTexture(src, options)
-    }
-    if (type === 'cubeTexture') {
-      resource = await this.loadCubeTexture(name, src, options)
-    }
-    if (type === 'model') {
-      resource = await this.loadGltf(src, options)
-    }
-    if (resource) {
-      this.resources.push({
-        type,
-        name: name || src,
-        resource,
-      })
-    }
-    return resource
-  }
-
-  async addResources(payload) {
-    const promises = payload.map((resource) => this.addResource(resource))
-
-    return await Promise.all(promises).then((result) => result)
-  }
-
-  getResource = (() => {
-    const memo = {}
-    return (string, type = 'name') => {
-      if (memo[string]) return memo[string]
-      const target = this.resources.find((resource) => resource[type] === string)
-      memo[string] = target
-      return target
-    }
-  })()
-
-  getResources(payload, type = 'name') {
-    if (typeof payload === 'function') {
-      return this.resources.filter(payload)
-    }
-    return this.resources.filter((resource) => resource[type] === payload)
-  }
-
-  loadTexture(url, options) {
-    return new Promise((resolve) => {
-      this.textureLoader.load(url, (texture) => {
-        for (const key in options) {
-          texture[key] = options[key]
-        }
-        resolve(texture)
-      })
-    })
-  }
-
-  loadCubeTexture = (() => {
-    const memo = {}
-    return function (name, url, options) {
-      const mats = memo[name]
-      mats ? mats.push(url) : (memo[name] = [url])
-
-      if (mats && mats.length === 6) {
-        return new Promise((resolve) => {
-          this.cubeTextureLoader.load(mats, (texture) => {
-            delete memo[name]
-            for (const key in options) {
-              texture[key] = options[key]
-            }
-            resolve(texture)
-          })
-        })
-      }
-    }
-  })()
-
-  loadGltf(url, options) {
-    return new Promise((resolve) => {
-      this.gltfLoader.load(url, (gltf) => {
-        for (const key in options) {
-          gltf[key] = options[key]
-        }
-
-        const model = gltf.scene
-        const group = new THREE.Group()
-        const box = new THREE.Box3().setFromObject(model)
-        const center = box.getCenter(new THREE.Vector3())
-        model.position.sub(center)
-        group.add(model)
-        gltf.scene = group
-
-        resolve(gltf)
-      })
-    })
   }
 
   disposeObject(obj) {
@@ -276,34 +192,6 @@ export default class {
         }
       })
       obj.material.dispose()
-    }
-  }
-
-  addEvent(event, object, type) {
-    const instance = {
-      event,
-      object,
-      type,
-    }
-    this.events.push(instance)
-    object.addEventListener(type, event)
-    return instance
-  }
-
-  removeEvent(event, object, type) {
-    const index = this.events.findIndex((item) => {
-      return item.event === event && item.object === object && item.type === type
-    })
-    if (~index) {
-      object.removeEventListener(type, event)
-      this.events.splice(index, 1)
-    }
-  }
-
-  removeEvents() {
-    while (this.events.length) {
-      const { event, object, type } = this.events.pop()
-      object.removeEventListener(type, event)
     }
   }
 
