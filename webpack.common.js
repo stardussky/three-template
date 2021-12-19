@@ -6,70 +6,70 @@ const CopyPlugin = require('copy-webpack-plugin')
 const transpileDependencies = []
 
 module.exports = {
-  entry: {
-    app: './src/index.js',
-  },
-  output: {
-    filename: 'js/[name].bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-    pathinfo: false,
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
+    entry: {
+        app: './src/index.js',
     },
-  },
-  optimization: {
-    moduleIds: 'deterministic',
-    runtimeChunk: 'single',
-    splitChunks: {
-      cacheGroups: {
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all',
-        },
-      },
+    output: {
+        filename: 'js/[name].bundle.js',
+        path: path.resolve(__dirname, 'dist'),
+        pathinfo: false,
     },
-  },
-  plugins: [
-    new Webpack.ProvidePlugin({}),
-    new HtmlWebpackPlugin({
-      template: 'index.html',
-    }),
-    new CopyPlugin({
-      patterns: [{ from: path.resolve(__dirname, 'public') }],
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(jpe?g|png|gif|svg)$/i,
-        type: 'asset/resource',
-        generator: {
-          filename: 'img/[hash][ext][query]',
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, 'src'),
         },
-      },
-      {
-        test: /\.m?js$/,
-        exclude: new RegExp(`node_modules/(?!(${transpileDependencies.join('|')})/).*`),
-        use: {
-          loader: 'babel-loader?cacheDirectory',
+    },
+    optimization: {
+        moduleIds: 'deterministic',
+        runtimeChunk: 'single',
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'vendors',
+                    chunks: 'all',
+                },
+            },
         },
-      },
-      {
-        test: /\.(glsl|vs|fs|vert|frag)$/,
-        type: 'asset/source',
-        exclude: /node_modules/,
-        use: ['glslify-loader'],
-      },
-      {
-        test: /\.(glb|gltf)$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'models/[hash][ext][query]',
-        },
-      },
+    },
+    plugins: [
+        new Webpack.ProvidePlugin({}),
+        new HtmlWebpackPlugin({
+            template: 'index.html',
+        }),
+        new CopyPlugin({
+            patterns: [{ from: path.resolve(__dirname, 'public') }],
+        }),
     ],
-  },
+    module: {
+        rules: [
+            {
+                test: /\.(jpe?g|png|gif|svg)$/i,
+                type: 'asset/resource',
+                generator: {
+                    filename: 'img/[hash][ext][query]',
+                },
+            },
+            {
+                test: /\.m?js$/,
+                exclude: new RegExp(`node_modules/(?!(${transpileDependencies.join('|')})/).*`),
+                use: {
+                    loader: 'babel-loader?cacheDirectory',
+                },
+            },
+            {
+                test: /\.(glsl|vs|fs|vert|frag)$/,
+                type: 'asset/source',
+                exclude: /node_modules/,
+                use: ['glslify-loader'],
+            },
+            {
+                test: /\.(glb|gltf)$/,
+                type: 'asset/resource',
+                generator: {
+                    filename: 'models/[hash][ext][query]',
+                },
+            },
+        ],
+    },
 }

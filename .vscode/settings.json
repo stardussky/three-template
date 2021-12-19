@@ -1,4 +1,16 @@
 {
-    "prettier.tabWidth": 2,
-    "editor.formatOnSave": true
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": false,
+    "eslint.alwaysShowStatus": true,
+    "eslint.options": {
+        "extensions": [".html", ".js"]
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true,
+    },
+    "eslint.workingDirectories": [
+        "."
+    ],
 }
