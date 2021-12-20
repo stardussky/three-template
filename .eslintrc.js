@@ -1,4 +1,8 @@
 module.exports = {
+    env: {
+        browser: true,
+        node: true,
+    },
     extends: ['eslint:recommended', 'standard'],
     parser: '@babel/eslint-parser',
     parserOptions: {
@@ -18,7 +22,6 @@ module.exports = {
             functions: 'never',
         }],
         'no-unused-vars': 'warn',
-        'no-undef': 'off',
         'no-new': 'off',
     },
 }

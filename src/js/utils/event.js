@@ -1,10 +1,10 @@
 export default class Event {
     constructor () {
         this.listeners = []
-        this.onEvents = {}
+        this.callbacks = {}
     }
 
-    add (type, object, callback) {
+    addListener (type, object, callback) {
         if (object.addEventListener !== undefined) {
             const instance = {
                 type,
@@ -16,7 +16,7 @@ export default class Event {
         }
     }
 
-    remove (type, object, callback) {
+    removeListener (type, object, callback) {
         if (object.removeEventListener !== undefined) {
             const index = this.listeners.findIndex((listener) => {
                 return (
@@ -32,7 +32,28 @@ export default class Event {
 
     on (name, callback) {
         if (typeof name === 'string' && typeof callback === 'function') {
-            this.onEvents[name] = callback
+            if (this.callbacks[name]) {
+                this.callbacks[name].push(callback)
+                return
+            }
+            this.callbacks[name] = [callback]
+        }
+    }
+
+    off (name, callback) {
+        if (typeof name === 'string' && typeof callback === 'function') {
+            if (this.callbacks[name]) {
+                const index = this.callbacks[name].findIndex(cb => cb === callback)
+                this.callbacks[name].splice(index, 1)
+            }
+        }
+    }
+
+    trigger (name, ...args) {
+        if (this.callbacks[name]) {
+            this.callbacks[name].forEach(callback => {
+                callback.apply(this, args)
+            })
         }
     }
 
@@ -42,8 +63,11 @@ export default class Event {
             object.removeEventListener(type, callback)
         }
 
-        for (const key in this.onEvents) {
-            delete this.onEvents[key]
+        for (const name in this.callbacks) {
+            while (this.callbacks[name].length) {
+                this.callbacks[name].pop()
+            }
         }
+        this.callbacks = undefined
     }
 }

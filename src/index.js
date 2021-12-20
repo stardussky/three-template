@@ -1,13 +1,13 @@
 import '@/style/main.scss'
-import App from '@/js/app'
+import App from '@/js/index'
 
 let app = new App(document.getElementById('three'))
-app.init()
 
 if (module.hot) {
-    module.hot.accept('@/js/app.js', () => {
+    module.hot.accept()
+    module.hot.dispose(() => {
+        console.clear()
         app.destroy()
         app = new App(document.getElementById('three'))
-        app.init()
     })
 }

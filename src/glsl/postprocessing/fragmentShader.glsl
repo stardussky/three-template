@@ -7,9 +7,9 @@ varying vec2 vUv;
 
 void main(){
 
-  vec4 renderTexture = texture2D(tDiffuse, vUv);
+    vec4 renderTexture = texture2D(tDiffuse, vUv);
 
-  vec3 final = renderTexture.rgb;
+    vec3 final = renderTexture.rgb;
 
-  gl_FragColor = vec4(final, 1.);
+    gl_FragColor = vec4(final, 1.);
 }

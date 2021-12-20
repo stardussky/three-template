@@ -1,43 +1,50 @@
-import { LoadingManager, TextureLoader, CubeTextureLoader } from 'three'
+import * as THREE from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import Event from './event'
 
-export default class Loader {
-    constructor (defaultResources) {
-        this.defaultResources = defaultResources
+export default class Loader extends Event {
+    constructor (sources) {
+        super()
         this.resources = []
-        this.status = {
-            total: 0,
-            progress: 0,
-            isDone: false,
-        }
-        this.loaderManager = new LoadingManager()
-        this.loaderManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-            this.status.total = itemsTotal
-            this.status.progress = itemsLoaded / this.status.total
-        }
-        this.loaderManager.onLoad = () => {
-            this.status.isDone = true
-        }
-        this.textureLoader = new TextureLoader(this.loaderManager)
-        this.cubeTextureLoader = new CubeTextureLoader(this.loaderManager)
+        this.loaderManager = new THREE.LoadingManager()
+        this.textureLoader = new THREE.TextureLoader(this.loaderManager)
+        this.cubeTextureLoader = new THREE.CubeTextureLoader(this.loaderManager)
         this.gltfLoader = new GLTFLoader(this.loaderManager).setDRACOLoader(
             new DRACOLoader().setDecoderPath('/draco/')
         )
-    }
 
-    async load () {
-        await this.add(this.defaultResources)
+        this.loaderManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+            this.trigger('load', url, itemsLoaded, itemsTotal)
+        }
+        this.loaderManager.onLoad = () => {
+            this.trigger('loaded')
+        }
+        this.add(sources).then(() => {
+            this.trigger('ready')
+        })
     }
 
     async add (payload) {
         const resources = await this.loadResources(payload)
-        this.resources.push(...resources)
+        if (resources) {
+            if (resources instanceof Array) {
+                resources.forEach((resource, i) => {
+                    if (resource.status === 'fulfilled') {
+                        this.resources.push(resource.value)
+                    } else {
+                        console.warn(`load resource fail: ${payload[i].src}`)
+                    }
+                })
+                return
+            }
+            this.resources.push(resources)
+        }
     }
 
     async loadResources (payload) {
-        if (Array.isArray(payload)) {
-            return await Promise.all(payload.map((resource) => this.loadResources(resource)))
+        if (payload instanceof Array) {
+            return await Promise.allSettled(payload.map((resource) => this.loadResources(resource)))
         }
 
         let { type, src, name, options } = payload
@@ -51,17 +58,20 @@ export default class Loader {
             name: name || src,
             resource: null,
         }
-        if (type === 'texture') {
-            generate.resource = await this.loadTexture(src, options)
+        try {
+            if (type === 'texture') {
+                generate.resource = await this.loadTexture(src, options)
+            }
+            if (type === 'cubeTexture') {
+                generate.resource = await this.loadCubeTexture(name, src, options)
+            }
+            if (type === 'model') {
+                generate.resource = await this.loadGltf(src, options)
+            }
+            return generate
+        } catch (err) {
+            console.warn(`load resource fail: ${src}`)
         }
-        if (type === 'cubeTexture') {
-            generate.resource = await this.loadCubeTexture(name, src, options)
-        }
-        if (type === 'model') {
-            generate.resource = await this.loadGltf(src, options)
-        }
-
-        return generate
     }
 
     getResource = (() => {
@@ -82,12 +92,14 @@ export default class Loader {
     }
 
     loadTexture (url, options) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             this.textureLoader.load(url, (texture) => {
                 for (const key in options) {
                     texture[key] = options[key]
                 }
                 resolve(texture)
+            }, undefined, (err) => {
+                reject(err)
             })
         })
     }
@@ -99,13 +111,15 @@ export default class Loader {
             mats ? mats.push(url) : (memo[name] = [url])
 
             if (mats && mats.length === 6) {
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     this.cubeTextureLoader.load(mats, (texture) => {
                         delete memo[name]
                         for (const key in options) {
                             texture[key] = options[key]
                         }
                         resolve(texture)
+                    }, undefined, (err) => {
+                        reject(err)
                     })
                 })
             }
@@ -113,7 +127,7 @@ export default class Loader {
     })()
 
     loadGltf (url, options) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             this.gltfLoader.load(url, (gltf) => {
                 for (const key in options) {
                     gltf[key] = options[key]
@@ -128,6 +142,8 @@ export default class Loader {
                 // gltf.scene = group
 
                 resolve(gltf)
+            }, undefined, (err) => {
+                reject(err)
             })
         })
     }
