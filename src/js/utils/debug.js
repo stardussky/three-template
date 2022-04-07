@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import * as dat from 'dat.gui'
+import GUI from 'lil-gui'
 import App from '../index'
 import Event from './event'
 
@@ -23,7 +23,7 @@ export default class Debug extends Event {
     }
 
     init () {
-        this.gui = new dat.GUI()
+        this.gui = new GUI()
         this.axe = new THREE.AxesHelper(1, 1)
         this.app.scene.add(this.axe)
     }

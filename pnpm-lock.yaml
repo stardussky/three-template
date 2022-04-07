@@ -11,7 +11,6 @@ specifiers:
   clean-webpack-plugin: ^4.0.0
   copy-webpack-plugin: ^10.2.0
   css-loader: ^6.5.1
-  dat.gui: ^0.7.7
   eslint: ^8.5.0
   eslint-config-standard: ^16.0.3
   eslint-plugin-import: ^2.25.3
@@ -21,25 +20,26 @@ specifiers:
   glsl-noise: ^0.0.0
   glslify-loader: ^2.0.0
   html-webpack-plugin: ^5.5.0
+  lil-gui: ^0.16.1
   mini-css-extract-plugin: ^2.4.5
   postcss: ^8.4.5
   postcss-loader: ^6.2.1
   postcss-preset-env: ^7.0.2
-  postprocessing: ^6.23.3
+  postprocessing: ^6.26.3
   sass: ^1.45.0
   sass-loader: ^12.4.0
   style-loader: ^3.3.1
-  three: ^0.135.0
+  three: ^0.139.2
   webpack: ^5.65.0
   webpack-cli: ^4.9.1
   webpack-dev-server: ^4.6.0
   webpack-merge: ^5.8.0
 
 dependencies:
-  dat.gui: 0.7.7
   glsl-noise: 0.0.0
-  postprocessing: 6.23.3_three@0.135.0
-  three: 0.135.0
+  lil-gui: 0.16.1
+  postprocessing: 6.26.3_three@0.139.2
+  three: 0.139.2
 
 devDependencies:
   '@babel/core': 7.16.5
@@ -2179,10 +2179,6 @@ packages:
     hasBin: true
     dev: true
 
-  /dat.gui/0.7.7:
-    resolution: {integrity: sha512-sRl/28gF/XRC5ywC9I4zriATTsQcpSsRG7seXCPnTkK8/EQMIbCu5NPMpICLGxX9ZEUvcXR3ArLYCtgreFoMDw==}
-    dev: false
-
   /debug/2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
     dependencies:
@@ -3651,6 +3647,10 @@ packages:
       type-check: 0.4.0
     dev: true
 
+  /lil-gui/0.16.1:
+    resolution: {integrity: sha512-6wnnfBvQxJYRhdLyIA+w5b8utwbuVxNmtpTXElm36OSgHa8lyKp00Xz/4AEx3kvodT0AJYgbfadCFWAM0Q8DgQ==}
+    dev: false
+
   /lines-and-columns/1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
     dev: true
@@ -4563,13 +4563,13 @@ packages:
       source-map-js: 1.0.1
     dev: true
 
-  /postprocessing/6.23.3_three@0.135.0:
-    resolution: {integrity: sha512-T/XCi+lsB1HWBen89wpumZJyxNX5LplyGATU2CPtSsJHr1Vz0lrzxKOAkuSUPZab13v4dB2ra5wUl+fpvwdLpA==}
+  /postprocessing/6.26.3_three@0.139.2:
+    resolution: {integrity: sha512-f9VMDQSLngrdJByPjza4pNHZWoEnGFdxj6GsgqGd2+RM3PYFTCZapgpX9W/FspRUg6Is38vkUfjvLxWyfBHbhQ==}
     engines: {node: '>= 0.13.2'}
     peerDependencies:
-      three: '>= 0.102.0 < 0.136.0'
+      three: '>= 0.107.0 < 0.140.0'
     dependencies:
-      three: 0.135.0
+      three: 0.139.2
     dev: false
 
   /prelude-ls/1.2.1:
@@ -5251,8 +5251,8 @@ packages:
     resolution: {integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=}
     dev: true
 
-  /three/0.135.0:
-    resolution: {integrity: sha512-kuEpuuxRzLv0MDsXai9huCxOSQPZ4vje6y0gn80SRmQvgz6/+rI0NAvCRAw56zYaWKMGMfqKWsxF9Qa2Z9xymQ==}
+  /three/0.139.2:
+    resolution: {integrity: sha512-gV7q7QY8rogu7HLFZR9cWnOQAUedUhu2WXAnpr2kdXZP9YDKsG/0ychwQvWkZN5PlNw9mv5MoCTin6zNTXoONg==}
     dev: false
 
   /through2/0.6.5:

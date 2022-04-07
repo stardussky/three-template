@@ -11,10 +11,10 @@
     "author": "Yang <stardussky@gmail.com>",
     "license": "ISC",
     "dependencies": {
-        "dat.gui": "^0.7.7",
         "glsl-noise": "^0.0.0",
-        "postprocessing": "^6.23.3",
-        "three": "^0.135.0"
+        "lil-gui": "^0.16.1",
+        "postprocessing": "^6.26.3",
+        "three": "^0.139.2"
     },
     "devDependencies": {
         "@babel/core": "^7.16.5",

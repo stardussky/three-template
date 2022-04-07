@@ -73,17 +73,19 @@ export default class App {
             this.controls.enableDamping = true
         }
 
-        this.tick.on('tick', (d, t) => {
-            if (this.postprocessing) {
-                this.postprocessing.composer.render()
-            } else {
-                this.renderer.render(this.scene, this.camera)
-            }
-            this.controls.update()
-        })
-        this.size.on('resize', () => {
-            this.camera.resize()
-            this.renderer.resize()
+        this.loader.on('ready', () => {
+            this.tick.on('tick', (d, t) => {
+                if (this.postprocessing) {
+                    this.postprocessing.composer.render()
+                } else {
+                    this.renderer.render(this.scene, this.camera)
+                }
+                this.controls.update()
+            })
+            this.size.on('resize', () => {
+                this.camera.resize()
+                this.renderer.resize()
+            })
         })
     }
 
