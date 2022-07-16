@@ -68,6 +68,6 @@ export default class Event {
                 this.callbacks[name].pop()
             }
         }
-        this.callbacks = undefined
+        this.callbacks = {}
     }
 }
