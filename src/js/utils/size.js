@@ -24,7 +24,7 @@ export default class Size extends Event {
         if (this.app.camera instanceof THREE.PerspectiveCamera) {
             const { position, fov, aspect } = this.app.camera
             const distance = position.distanceTo(new THREE.Vector3(0)) * Math.sign(position.z)
-            const vFov = THREE.Math.degToRad(fov)
+            const vFov = THREE.MathUtils.degToRad(fov)
             const height = 2 * Math.tan(vFov / 2) * distance
             const width = height * aspect
             return { width, height }
