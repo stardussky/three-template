@@ -1,38 +1,81 @@
 import * as THREE from 'three'
-import App from '../index'
-import Event from './event'
+import CustomEventTarget from '@/js/utils/Event/CustomEventTarget'
+import CustomEvent from '@/js/utils/Event/CustomEvent'
 
-export default class Size extends Event {
-    constructor () {
+const Size = class extends CustomEventTarget {
+    #width
+
+    #height
+
+    #aspect
+
+    #dpr
+
+    constructor(sketch) {
         super()
-        this.app = new App()
-        this.addListener('resize', window, () => {
-            this.trigger('resize', this.viewport, this.viewSize)
-        })
-    }
 
-    get viewport () {
-        return {
-            width: window.innerWidth,
-            height: window.innerHeight,
-            aspect: window.innerWidth / window.innerHeight,
-            dpr: Math.min(window.devicePixelRatio, 1.5),
+        this.calculateSize = this.calculateSize.bind(this)
+        if (window.Sketch && sketch instanceof window.Sketch) {
+            this.sketch = sketch
+            this.sketch.eventManager.addEventListener(window, 'resize', this.calculateSize)
+            this.calculateSize()
         }
     }
 
-    get viewSize () {
-        if (this.app.camera instanceof THREE.PerspectiveCamera) {
-            const { position, fov, aspect } = this.app.camera
-            const distance = position.distanceTo(new THREE.Vector3(0)) * Math.sign(position.z)
-            const vFov = THREE.MathUtils.degToRad(fov)
-            const height = 2 * Math.tan(vFov / 2) * distance
-            const width = height * aspect
-            return { width, height }
-        }
-        const { top, right, bottom, left } = this.app.camera
+    calculateSize() {
+        this.#width = this.sketch.el.clientWidth
+        this.#height = this.sketch.el.clientHeight
+        this.#aspect = this.#width / this.#height
+        this.#dpr = Math.min(window.devicePixelRatio, 1.5)
+
+        this.dispatchEvent(new CustomEvent('calculatesize', this))
+    }
+
+    get width() {
+        return this.#width
+    }
+
+    get height() {
+        return this.#height
+    }
+
+    get aspect() {
+        return this.#aspect
+    }
+
+    get dpr() {
+        return this.#dpr
+    }
+
+    get viewport() {
         return {
-            width: Math.abs(right) + Math.abs(left),
-            height: Math.abs(top) + Math.abs(bottom),
+            width: this.#width,
+            height: this.#height,
+            aspect: this.#aspect,
+            dpr: this.#dpr,
         }
+    }
+
+    get viewsize() {
+        if (this.sketch && this.sketch.camera) {
+            if (this.sketch.camera instanceof THREE.PerspectiveCamera) {
+                const { position, fov, aspect } = this.sketch.camera
+                const distance = position.distanceTo(new THREE.Vector3(0)) * Math.sign(position.z)
+                const vFov = THREE.MathUtils.degToRad(fov)
+                const height = 2 * Math.tan(vFov / 2) * distance
+                const width = height * aspect
+                return { width, height }
+            }
+            const {
+                top, right, bottom, left,
+            } = this.sketch.camera
+            return {
+                width: Math.abs(right) + Math.abs(left),
+                height: Math.abs(top) + Math.abs(bottom),
+            }
+        }
+        return { width: 0, height: 0 }
     }
 }
+
+export default Size

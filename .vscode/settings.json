@@ -1,16 +1,13 @@
 {
-    "editor.insertSpaces": true,
-    "editor.detectIndentation": false,
     "editor.tabSize": 4,
     "editor.formatOnSave": false,
-    "eslint.alwaysShowStatus": true,
-    "eslint.options": {
-        "extensions": [".html", ".js"]
-    },
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true,
+        "source.fixAll.stylelint": true
     },
-    "eslint.workingDirectories": [
-        "."
-    ],
+    "eslint.alwaysShowStatus": true,
+    "eslint.options": {
+        "extensions": [".html", ".js",]
+    },
+    "stylelint.validate": ["css", "scss"],
 }

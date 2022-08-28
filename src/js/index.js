@@ -1,129 +1,137 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import Size from './utils/size'
-import Renderer from './base/renderer'
-import Camera from './base/perspectiveCamera'
-import Postprocessing from './base/postprocessing'
-// import Camera from './base/orthographicCamera'
-import Tick from './utils/tick'
-import Loader from './utils/loader'
-import Debug from './utils/debug'
-import World from './world/index'
 
-let instance = null
+import CustomEventTarget from '@/js/utils/Event/CustomEventTarget'
+import EventManager from '@/js/utils/Event/EventManager'
+import Loader from '@/js/utils/Loader/index'
+import Size from '@/js/utils/Size'
+import Tick from '@/js/utils/Tick'
+import Debug from '@/js/utils/Debug'
 
-const defaultSources = [
-    {
-        type: 'texture',
-        name: 'grid',
-        src: 'uv_grid.jpg',
-        options: {
-            generateMipmaps: false,
-            minFilter: THREE.NearestFilter,
-            magFilter: THREE.NearestFilter,
-            encoding: THREE.sRGBEncoding,
-            needsUpdate: true,
-        },
-    },
-    {
-        type: 'model',
-        name: 'helmet',
-        src: 'helmet.glb',
-    },
-]
+import Renderer from '@/js/base/Renderer'
+import PerspectiveCamera from '@/js/base/PerspectiveCamera'
+import OrthographicCamera from '@/js/base/OrthographicCamera'
+import Scene from '@/js/base/Scene'
+import Raycaster from '@/js/base/Raycaster'
+import Postprocessing from '@/js/base/Postprocessing'
+import RenderTarget from '@/js/base/RenderTarget'
 
-export default class App {
-    constructor (el, options) {
-        if (instance) {
-            return instance
+import World from '@/js/worlds/World'
+
+import sources from '@/js/data/sources'
+
+const Sketch = class extends CustomEventTarget {
+    #update = function update() {
+        if (this.postprocessing) {
+            this.postprocessing.composer.render()
+            return
         }
-        instance = this
+        this.renderer.render(this.scene, this.camera)
+    }.bind(this)
 
-        if (!(el instanceof Element)) el = document.body
+    constructor(el, options) {
+        super()
 
-        this.options = {
-            control: true,
-            alpha: false,
-            autoClear: true,
-            enableShadow: false,
-            shadowAutoUpdate: false,
-            autoRender: true,
-            ...options,
-        }
-        const { control, alpha, autoClear, enableShadow, shadowAutoUpdate } = this.options
         this.el = el
-        this.size = new Size()
-        this.tick = new Tick()
-        this.loader = new Loader(defaultSources)
-        this.scene = new THREE.Scene()
-        this.renderer = new Renderer({
-            alpha,
-            preserveDrawingBuffer: !autoClear,
-            enableShadow,
-            shadowAutoUpdate,
+        this.options = {
+            fps: 60,
+            control: true,
+        }
+        if (!(this.el instanceof HTMLElement)) {
+            this.el = document.body
+        }
+        this.eventManager = new EventManager()
+        this.loader = new Loader(sources)
+        this.loader.setGlobalTextureLoad = (texture) => {
+            if (texture) {
+                texture.generateMipmaps = false
+                texture.minFilter = THREE.NearestFilter
+                texture.magFilter = THREE.NearestFilter
+                texture.encoding = THREE.sRGBEncoding
+                texture.needsUpdate = true
+            }
+        }
+        this.loader.setGlobalImageBitmapLoad = (texture) => {}
+        this.loader.setGlobalCubeTextureLoad = (texture) => {}
+        this.loader.setGlobalGltfLoad = (gltf) => {}
+        this.size = new Size(this)
+        this.tick = new Tick(this)
+        this.debug = new Debug(this)
+
+        const { height, aspect } = this.size
+        this.setOptions({
+            renderer: {
+                alpha: false,
+                autoClear: true,
+                enableShadow: false,
+                shadowAutoUpdate: false,
+                autoRender: true,
+            },
+            camera: {
+                fov: 45,
+                aspect,
+                left: (height * aspect) / -2,
+                right: (height * aspect) / 2,
+                top: height / 2,
+                bottom: height / -2,
+                near: 0.01,
+                far: 100,
+            },
+            ...options,
         })
-        this.camera = new Camera()
-        // this.postprocessing = new Postprocessing()
-        this.world = new World()
-        this.debug = new Debug()
+
+        this.scene = new Scene()
+        this.camera = new PerspectiveCamera(this)
+        // this.camera = new OrthographicCamera(this)
+        this.renderer = new Renderer(this)
+        this.raycaster = new Raycaster(this, this.camera)
+        // this.postprocessing = new Postprocessing(this)
+        this.world = new World(this)
+
         this.el.appendChild(this.renderer.domElement)
 
-        if (control) {
-            this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-            this.controls.enableDamping = true
-        }
-
-        this.loader.on('ready', () => {
-            this.tick.on('tick', (d, t) => {
-                if (this.postprocessing) {
-                    this.postprocessing.composer.render()
-                } else {
-                    this.renderer.render(this.scene, this.camera)
-                }
-                this.controls.update()
-            })
-            this.size.on('resize', () => {
-                this.camera.resize()
-                this.renderer.resize()
-            })
-        })
+        this.render()
     }
 
-    disposeObjects (object) {
-        while (object.children.length) {
-            let child = object.children.pop()
-            this.disposeObjects.bind(this)(child)
-            object.remove(child)
-            child = null
-        }
-
-        if (object.geometry) {
-            object.geometry.dispose()
-        }
-
-        if (object.material) {
-            Object.values(object.material).forEach((prop) => {
-                if (prop && typeof prop.dispose === 'function') {
-                    prop.dispose()
-                }
-            })
-            object.material.dispose()
+    setOptions(options) {
+        this.options = {
+            ...this.options,
+            ...options,
         }
     }
 
-    destroy () {
-        this.disposeObjects(this.scene)
+    stop() {
+        this.eventManager.removeEventListener(this.tick, 'tick', this.#update)
+    }
+
+    render() {
+        this.eventManager.addEventListener(this.tick, 'tick', this.#update)
+    }
+
+    destroy() {
+        super.destroy()
+
+        this.stop()
+
+        this.el.removeChild(this.renderer.domElement)
+
+        this.eventManager.destroy()
+        this.loader.destroy()
         this.size.destroy()
         this.tick.destroy()
-        this.loader.destroy()
         this.debug.destroy()
+
+        this.scene.destroy()
         this.renderer.dispose()
-        if (this.controls) {
-            this.controls.dispose()
+        this.raycaster.destroy()
+
+        if (this.postprocessing) {
+            this.postprocessing.destroy()
         }
 
-        while (this.el.lastChild) {
-            this.el.removeChild(this.el.lastChild)
-        }
+        this.world.destroy()
     }
 }
+
+window.Sketch = Sketch
+
+export default Sketch

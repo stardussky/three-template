@@ -1,18 +1,29 @@
 import * as THREE from 'three'
-import App from '../index'
 
-export default class Camera extends THREE.PerspectiveCamera {
-    constructor () {
-        const app = new App()
-        const { aspect } = app.size.viewport
-        super(45, aspect, 0.01, 100)
-        this.app = app
-        this.position.set(0, 0, 3)
-    }
+const PerspectiveCamera = class extends THREE.PerspectiveCamera {
+    constructor(...args) {
+        if (window.Sketch && args[0] instanceof window.Sketch) {
+            const sketch = args[0]
+            const options = sketch.options?.camera ?? {}
+            const {
+                fov = 45,
+                aspect = sketch.size.aspect,
+                near = 0.01,
+                far = 100,
+            } = options
+            super(fov, aspect, near, far)
 
-    resize () {
-        const { aspect } = this.app.size.viewport
-        this.aspect = aspect
-        this.updateProjectionMatrix()
+            this.sketch = sketch
+
+            this.sketch.eventManager.addEventListener(this.sketch.size, 'calculatesize', (e) => {
+                const { aspect } = e.detail
+                this.aspect = aspect
+                this.updateProjectionMatrix()
+            })
+        } else {
+            super(...args)
+        }
     }
 }
+
+export default PerspectiveCamera

@@ -1,33 +1,49 @@
 import * as THREE from 'three'
-import App from '../index'
 
-export default class Renderer extends THREE.WebGLRenderer {
-    constructor (options) {
-        const app = new App()
-        const { width, height, dpr } = app.size.viewport
-        super({
-            powerPreference: 'high-performance',
-            antialias: dpr <= 1,
-            ...options,
-        })
-        this.options = options
-        const { autoClear, enableShadow, shadowAutoUpdate } = this.options
-        this.app = app
-        this.setSize(width, height)
-        this.setPixelRatio(dpr)
-        this.autoClear = autoClear
+const Renderer = class extends THREE.WebGLRenderer {
+    constructor(...args) {
+        if (window.Sketch && args[0] instanceof window.Sketch) {
+            const sketch = args[0]
+            const { width, height, dpr } = sketch.size.viewport
+            const options = sketch.options?.renderer ?? {}
+            const {
+                alpha = false,
+                autoClear = true,
+                enableShadow = false,
+                shadowAutoUpdate = false,
+            } = options
+
+            super({
+                powerPreference: 'high-performance',
+                antialias: dpr <= 1,
+                alpha,
+                preserveDrawingBuffer: !autoClear,
+                enableShadow,
+                shadowAutoUpdate,
+            })
+
+            this.sketch = sketch
+            this.setSize(width, height)
+            this.setPixelRatio(dpr)
+            this.autoClear = autoClear
+            this.shadowMap.enabled = enableShadow
+            this.shadowMap.autoUpdate = shadowAutoUpdate
+
+            this.sketch.eventManager.addEventListener(this.sketch.size, 'calculatesize', (e) => {
+                const { width, height, dpr } = e.detail
+                this.setSize(width, height)
+                this.setPixelRatio(dpr)
+            })
+        } else {
+            super(...args)
+        }
+
         this.physicallyCorrectLights = true
         this.outputEncoding = THREE.sRGBEncoding
         this.toneMapping = THREE.ACESFilmicToneMapping
         this.toneMappingExposure = 1
         this.shadowMap.type = THREE.VSMShadowMap
-        this.shadowMap.enabled = enableShadow
-        this.shadowMap.autoUpdate = shadowAutoUpdate
-    }
-
-    resize () {
-        const { width, height, dpr } = this.app.size.viewport
-        this.setSize(width, height)
-        this.setPixelRatio(dpr)
     }
 }
+
+export default Renderer

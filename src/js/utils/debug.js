@@ -1,38 +1,67 @@
 import * as THREE from 'three'
 import GUI from 'lil-gui'
-import App from '../index'
-import Event from './event'
+import CustomEventTarget from '@/js/utils/Event/CustomEventTarget'
+import CustomEvent from '@/js/utils/Event/CustomEvent'
+import Scene from '@/js/base/Scene'
 
-export default class Debug extends Event {
-    constructor () {
-        super()
-        this.app = new App()
-        this.gui = null
-        this.axe = null
+const Debug = class extends CustomEventTarget {
+    #axe
 
-        if (window.location.hash === '#debug') {
-            this.init()
-        }
-        this.addListener('hashchange', window, () => {
-            if (window.location.hash === '#debug') {
-                this.init()
-                return
-            }
-            this.destroy()
-        })
-    }
-
-    init () {
+    #initialize = function initialize() {
         this.gui = new GUI()
-        this.axe = new THREE.AxesHelper(1, 1)
-        this.app.scene.add(this.axe)
+
+        if (this.sketch) {
+            this.sketch.eventManager.addEventListener(this.sketch.loader, 'ready', (e) => {
+                this.#axe = new THREE.AxesHelper(1, 1)
+                this.sketch.scene.add(this.#axe)
+            })
+        }
+    }.bind(this)
+
+    constructor(sketch) {
+        super()
+        this.#axe = null
+
+        if (window.Sketch && sketch instanceof window.Sketch) {
+            this.sketch = sketch
+        }
+
+        this.isDebug = false
+        this.gui = null
+
+        const urlParams = new URLSearchParams(window.location.search)
+
+        if (import.meta.env.DEV && urlParams.get('debug')) {
+            this.isDebug = true
+            this.#initialize()
+        }
     }
 
-    destroy () {
+    get console() {
+        if (this.isDebug) {
+            return console
+        }
+        return {
+            ...Object.keys(console).reduce((accumulator, key) => {
+                accumulator[key] = () => {}
+                return accumulator
+            }, {}),
+        }
+    }
+
+    destroy() {
         super.destroy()
+
         if (this.gui) {
             this.gui.destroy()
+            this.gui = null
         }
-        this.app.scene.remove(this.axe)
+        if (this.#axe) {
+            Scene.disposeMeshes(this.#axe)
+            this.sketch.scene.remove(this.#axe)
+            this.#axe = null
+        }
     }
 }
+
+export default Debug
